@@ -20,6 +20,7 @@ import pathlib
 gpu_available = tf.config.list_physical_devices('GPU')
 print(tf.test.is_gpu_available(cuda_only=True))
 
+
 def get_image_loss(file):
     '''
     Load an image from a file and calculate sample loss
@@ -38,6 +39,7 @@ def get_image_loss(file):
     sample_loss = np.mean(loss) + 3*np.std(loss)
     return sample_loss
 
+
 def get_decoded_img(file):
     '''
     Generate a decoded image and return it as grayscale integer
@@ -52,6 +54,8 @@ def get_decoded_img(file):
     return reconstructed_img.astype(int)
 
 # compare images
+
+
 def show_difference(a, b):
     '''
     subtract differences between autoencoder and reconstructed image
@@ -82,6 +86,7 @@ def show_difference(a, b):
         combined = cv2.addWeighted(inv_01, 0.5, inv_02, 0.5, 0)
         return combined
 
+
 if __name__ == "__main__":
 
     '''
@@ -95,15 +100,14 @@ if __name__ == "__main__":
 
     os.chdir(path)
     files = os.listdir()
-    image = cv2.imread(files[0],0)
+    image = cv2.imread(files[0], 0)
     size = image.shape
-    height= size[0]
+    height = size[0]
     width = size[1]
 
     # load model
     os.chdir(path)
     autoencoder = keras.models.load_model('./model/')
-
 
     '''
     3. Make an inference
@@ -123,23 +127,25 @@ if __name__ == "__main__":
         if filename.endswith(".jpg"):
             data = cv2.imread(filename, 0)
             # resize to make sure data consistency
-            resized_data = cv2.resize(data, (width, height), interpolation=cv2.INTER_AREA) 
+            resized_data = cv2.resize(
+                data, (width, height), interpolation=cv2.INTER_AREA)
             # nomalize img
             normalized_data = resized_data.astype('float32') / 255.
             # test an image
-            encoded = autoencoder.encoder(normalized_data.reshape(-1, height, width,1))
+            encoded = autoencoder.encoder(
+                normalized_data.reshape(-1, height, width, 1))
             decoded = autoencoder.decoder(encoded)
-            loss = tf.keras.losses.mse(decoded, normalized_data.reshape(-1, height, width))
+            loss = tf.keras.losses.mse(
+                decoded, normalized_data.reshape(-1, height, width))
             sample_loss = np.mean(loss) + np.std(loss)
             values.append(sample_loss)
-            print("IO parts sample loss: ", sample_loss)  
+            print("IO parts sample loss: ", sample_loss)
 
     plt.xlabel('loss value')
     plt.ylabel('number of samples')
-    plt.hist(values)  
+    plt.hist(values)
 
     print(f'mean: {np.mean(values)}, median: {np.median(values)}')
-
 
     # bad parts
     values = []
@@ -155,27 +161,30 @@ if __name__ == "__main__":
         if filename.endswith(".jpg"):
             data = cv2.imread(filename, 0)
             # resize to make sure data consistency
-            resized_data = cv2.resize(data, (width, height), interpolation=cv2.INTER_AREA) 
+            resized_data = cv2.resize(
+                data, (width, height), interpolation=cv2.INTER_AREA)
             # nomalize img
             normalized_data = resized_data.astype('float32') / 255.
             # test an image
-            encoded = autoencoder.encoder(normalized_data.reshape(-1, height, width,1))
+            encoded = autoencoder.encoder(
+                normalized_data.reshape(-1, height, width, 1))
             decoded = autoencoder.decoder(encoded)
-            loss = tf.keras.losses.mse(decoded, normalized_data.reshape(-1, height, width))
+            loss = tf.keras.losses.mse(
+                decoded, normalized_data.reshape(-1, height, width))
             sample_loss = np.mean(loss) + np.std(loss)
             values.append(sample_loss)
-            print("NIO parts sample loss: ", sample_loss)  
+            print("NIO parts sample loss: ", sample_loss)
 
     plt.xlabel('loss value')
     plt.ylabel('number of samples')
-    plt.hist(values)    
+    plt.hist(values)
 
     threshold = 0.05
     anomaly = []
 
-    for file, value in zip (files, values):
+    for file, value in zip(files, values):
         if value > threshold:
-            print (file, value)
+            print(file, value)
             anomaly.append(file)
 
     import csv
@@ -183,17 +192,18 @@ if __name__ == "__main__":
     # check images
     filename = anomaly[0]
     data = cv2.imread(filename, 0)
-    resized_data = cv2.resize(data, (width, height), interpolation=cv2.INTER_AREA) 
+    resized_data = cv2.resize(data, (width, height),
+                              interpolation=cv2.INTER_AREA)
     normalized_data = resized_data.astype('float32') / 255.
     encoded = autoencoder.encoder(normalized_data.reshape(-1, height, width))
     decoded = autoencoder.decoder(encoded)
     img = decoded.numpy()
-    plt.imshow(img.reshape(height,width), cmap='gray')
+    plt.imshow(img.reshape(height, width), cmap='gray')
 
     '''
     4. Find differences
     '''
-    # bad parts  
+    # bad parts
     filename = anomaly[0]
 
     image = cv2.imread(filename, 0)
@@ -214,17 +224,13 @@ if __name__ == "__main__":
     reconstructed *= 255
     reconstructed.shape
     reconstructed = reconstructed.astype(int)
-    cv2.imwrite('/home/m0034463/store/data/piston/reconstructed.jpg', reconstructed)
-
-
+    cv2.imwrite(
+        '/home/m0034463/store/data/piston/reconstructed.jpg', reconstructed)
 
     diff = show_difference(image, reconstructed)
     # cv2.imshow('diff', diff)
     cv2.imwrite('/home/m0034463/store/data/piston/compared.jpg', diff)
 
-
-
-    reconstructed = cv2.imread('/home/m0034463/store/data/piston/reconstructed.jpg')
+    reconstructed = cv2.imread(
+        '/home/m0034463/store/data/piston/reconstructed.jpg')
     plt.imshow(reconstructed)
-
-
